@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red de Castillos - Cámara de Turismo de Nueva Esparta (CTENE)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --primary: #003366;
+      --secondary: #002244;
+      --accent: #d4af37;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --border: #e9ecef;
+      --shadow: 0 4px 12px rgba(0, 51, 102, 0.08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Montserrat', 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.8rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--accent);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .logo-badge {
+      background-color: var(--accent);
+      color: var(--primary);
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 8px;
+    }
+
+    nav ul { display: flex; list-style: none; gap: 15px; }
+    nav a { color: white; text-decoration: none; font-size: 0.88rem; font-weight: 500; }
+    nav a:hover { color: var(--accent); }
+
+    .lang-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .lang-btn.active { background-color: var(--accent); color: var(--primary); }
+
+    .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    .hero {
+      background: linear-gradient(rgba(0, 51, 102, 0.85), rgba(0, 34, 68, 0.85)), url('https://upload.wikimedia.org/wikipedia/commons/8/80/Fort%C3%ADn_La_Galera_en_Juan_Griego.jpg') center/cover;
+      color: white;
+      padding: 3.5rem 2rem;
+      border-radius: var(--radius);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    .hero h2 { font-size: 2.2rem; margin-bottom: 0.8rem; }
+    .hero p { max-width: 800px; margin: 0 auto 1.5rem auto; color: #e2e8f0; }
+
+    .btn-cta {
+      display: inline-block;
+      background-color: var(--accent);
+      color: var(--primary);
+      padding: 10px 22px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 700;
+      margin: 0 5px;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 3px solid var(--accent);
+      display: inline-block;
+      padding-bottom: 4px;
+    }
+
+    .castles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+
+    .castle-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .castle-card.featured { border: 2px solid var(--accent); }
+
+    /* GALERÍA DE 3 FOTOS POR CASTILLO */
+    .carousel {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      overflow: hidden;
+    }
+
+    .carousel-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .carousel-img.active {
+      display: block;
+    }
+
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 51, 102, 0.7);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      border-radius: 4px;
+    }
+
+    .carousel-btn.prev { left: 8px; }
+    .carousel-btn.next { right: 8px; }
+
+    .card-body { padding: 1.5rem; }
+
+    .fact-box {
+      background-color: #fffdf5;
+      padding: 0.8rem;
+      border-left: 4px solid var(--accent);
+      margin: 12px 0;
+      font-size: 0.85rem;
+    }
+
+    #map { height: 380px; border-radius: var(--radius); margin-bottom: 3rem; }
+
+    footer {
+      background-color: var(--primary);
+      color: white;
+      padding: 2.5rem 2rem 1.5rem 2rem;
+      border-top: 4px solid var(--accent);
+    }
+
+    .footer-bottom { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; font-size: 0.8rem; color: #a0aec0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display:flex; align-items:center;">
+      <span class="logo-badge">CTENE</span>
+      <div>
+        <h1 style="font-size:1.1rem;" id="header-title">Cámara de Turismo de Nueva Esparta</h1>
+        <p style="font-size:0.75rem; color:#d0dce5;" id="header-sub">Guía Turística Digital Bilingüe</p>
+      </div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#inicio" id="nav-1">Inicio</a></li>
+        <li><a href="#castillos" id="nav-2">Castillos</a></li>
+      </ul>
+      <div style="margin-left:10px; display:inline-block;">
+        <button class="lang-btn active" onclick="setLanguage('es')" id="btn-es">ES</button>
+        <button class="lang-btn" onclick="setLanguage('en')" id="btn-en">EN</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container" id="inicio">
+
+    <section class="hero">
+      <h2 id="hero-title">Patrimonio Histórico y Fortificaciones de Isla de Margarita</h2>
+      <p id="hero-desc">Bienvenido a la plataforma oficial de divulgación turística de la CTENE. Explora la arquitectura colonial militar y la gesta independentista en Nueva Esparta.</p>
+      <a href="#castillos" class="btn-cta" id="cta-btn">Explorar Ruta Histórica</a>
+    </section>
+
+    <section id="castillos">
+      <h2 class="section-title" id="sec-castles">Red de Fortificaciones Principales</h2>
+      <div class="castles-grid">
+
+        <!-- FORTÍN DE LA GALERA (3 FOTOS REALES INCLUYENDO ATARDECER) -->
+        <article class="castle-card featured">
+          <div class="carousel" id="carousel-galera">
+            <img src="https://images.mnstatic.com/15/93/1593088d58b5ba261073131413325c3a.jpg" class="carousel-img active" alt="Atardecer en Fortín de La Galera">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Fort%C3%ADn_La_Galera_en_Juan_Griego.jpg" class="carousel-img" alt="Vista frontal del Fortín de La Galera
